@@ -1,0 +1,474 @@
+import React, { useMemo, useState } from "react";
+import { motion } from "framer-motion";
+import {
+  Car,
+  Gauge,
+  Fuel,
+  ShieldCheck,
+  Calendar,
+  PhoneCall,
+  DollarSign,
+  Clock,
+  MapPin,
+  CheckCircle,
+  ArrowRight,
+  Star,
+} from "lucide-react";
+
+// ---------- Helpers
+const Section = ({ id, children, className = "" }) => (
+  <section id={id} className={`py-16 md:py-24 ${className}`}>{children}</section>
+);
+
+const Container = ({ children, className = "" }) => (
+  <div className={`mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 ${className}`}>{children}</div>
+);
+
+const Stat = ({ icon: Icon, label, value }) => (
+  <div className="flex items-center gap-4 rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur">
+    <div className="rounded-xl bg-white/10 p-3"><Icon className="h-6 w-6" /></div>
+    <div>
+      <div className="text-sm/5 text-white/70">{label}</div>
+      <div className="text-xl font-semibold">{value}</div>
+    </div>
+  </div>
+);
+
+const Pill = ({ children }) => (
+  <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs text-white/80">
+    {children}
+  </span>
+);
+
+const Feature = ({ icon: Icon, title, desc }) => (
+  <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
+    <Icon className="mb-4 h-6 w-6" />
+    <h3 className="mb-2 text-lg font-semibold">{title}</h3>
+    <p className="text-white/70">{desc}</p>
+  </div>
+);
+
+// ---------- Page
+export default function ArturaRental() {
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    pickupDate: "",
+    dropoffDate: "",
+    pickupLocation: "Los Angeles",
+    age: "",
+    insurance: true,
+    delivery: false,
+    terms: false,
+  });
+
+  const gallery = [
+    // Hand-picked Unsplash/stock links; replace with your own assets for production.
+    "https://images.unsplash.com/photo-1606664325206-227ab2b41a66?q=80&w=2000&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1619767886558-efdc259cde1a?q=80&w=2000&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1619767886402-35b6b1a7c3c8?q=80&w=2000&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?q=80&w=2000&auto=format&fit=crop",
+  ];
+
+  const specs = [
+    { icon: Gauge, label: "0–60 mph", value: "≈ 3.0 s" },
+    { icon: Car, label: "Top Speed", value: "205 mph" },
+    { icon: Fuel, label: "Power", value: "671 hp (PHEV)" },
+    { icon: ShieldCheck, label: "Drivetrain", value: "RWD, 8‑spd DCT" },
+  ];
+
+  const features = [
+    {
+      icon: DollarSign,
+      title: "Transparent Pricing",
+      desc: "Flat daily rates with optional insurance and door‑to‑door delivery.",
+    },
+    {
+      icon: Calendar,
+      title: "Flexible Scheduling",
+      desc: "Half‑day, full‑day, and weekend packages to fit your plans.",
+    },
+    {
+      icon: ShieldCheck,
+      title: "Premium Protection",
+      desc: "Low deductibles and full coverage options available at checkout.",
+    },
+    {
+      icon: Clock,
+      title: "Rapid Check‑In",
+      desc: "Digital agreements and express pickup get you driving in minutes.",
+    },
+  ];
+
+  const packages = [
+    {
+      name: "Half‑Day (6 hrs)",
+      price: 1299,
+      includes: ["75 free miles", "Comprehensive walkthrough", "Basic insurance"],
+    },
+    {
+      name: "Full Day (24 hrs)",
+      price: 1999,
+      popular: true,
+      includes: ["150 free miles", "Concierge support", "Premium insurance option"],
+    },
+    {
+      name: "Weekend (48 hrs)",
+      price: 3499,
+      includes: ["300 free miles", "Priority delivery", "Two drivers included"],
+    },
+  ];
+
+  const todayISO = useMemo(() => new Date().toISOString().split("T")[0], []);
+
+  const handleChange = (e) => {
+    const { name, type, checked, value } = e.target;
+    setForm((f) => ({ ...f, [name]: type === "checkbox" ? checked : value }));
+  };
+
+  const submit = (e) => {
+    e.preventDefault();
+    // Basic validation
+    const required = ["name", "email", "phone", "pickupDate", "dropoffDate", "age"];
+    const missing = required.filter((k) => !String(form[k]).trim());
+    if (missing.length) {
+      alert(`Please complete: ${missing.join(", ")}`);
+      return;
+    }
+    if (!form.terms) {
+      alert("Please accept the terms & conditions.");
+      return;
+    }
+    const summary = {
+      vehicle: "2023 McLaren Artura",
+      ...form,
+      quoteEstimate: estimateQuote(form),
+    };
+    alert(
+      `Request received!\n\n${JSON.stringify(summary, null, 2)}\n\nWe'll contact you shortly to confirm availability.`
+    );
+  };
+
+  function estimateQuote(f) {
+    // Tiny estimator for demo; replace with backend pricing.
+    const dayMs = 24 * 60 * 60 * 1000;
+    const days = Math.max(
+      1,
+      Math.ceil((new Date(f.dropoffDate) - new Date(f.pickupDate)) / dayMs)
+    );
+    const base = days === 1 ? 1999 : days === 2 ? 3499 : 1999 * days;
+    const opts = (f.insurance ? 199 : 0) + (f.delivery ? 149 : 0);
+    return {
+      days,
+      base,
+      options: opts,
+      total: base + opts,
+    };
+  }
+
+  return (
+    <div className="min-h-screen scroll-smooth bg-gradient-to-b from-zinc-950 via-zinc-900 to-black text-white">
+      {/* Nav */}
+      <header className="sticky top-0 z-50 border-b border-white/10 bg-black/60 backdrop-blur">
+        <Container className="flex items-center justify-between py-4">
+          <a href="#top" className="flex items-center gap-2 font-semibold">
+            <Car className="h-6 w-6" />
+            LuxeMotion
+          </a>
+          <nav className="hidden items-center gap-6 md:flex text-white/80">
+            <a href="#specs" className="hover:text-white">Specs</a>
+            <a href="#pricing" className="hover:text-white">Pricing</a>
+            <a href="#gallery" className="hover:text-white">Gallery</a>
+            <a href="#book" className="rounded-full bg-white px-4 py-2 font-medium text-black hover:bg-white/90">Book Now</a>
+          </nav>
+        </Container>
+      </header>
+
+      {/* Hero */}
+      <Section id="top" className="pb-8 pt-20">
+        <Container>
+          <div className="grid items-center gap-10 md:grid-cols-2">
+            <div>
+              <Pill>
+                <Star className="h-4 w-4" /> 2023 McLaren Artura — Hybrid Supercar
+              </Pill>
+              <h1 className="mt-4 text-4xl font-bold md:text-6xl">
+                Rent the <span className="bg-gradient-to-r from-white to-white/50 bg-clip-text text-transparent">Artura</span>
+              </h1>
+              <p className="mt-4 max-w-prose text-lg text-white/80">
+                Experience McLaren's next‑gen plug‑in hybrid V6 with instant electric torque and
+                razor‑sharp handling. Perfect for red‑carpet arrivals, weekend escapes, and unforgettable content.
+              </p>
+              <div className="mt-6 flex flex-wrap items-center gap-3">
+                <a href="#book" className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 font-semibold text-black">
+                  Book the Artura <ArrowRight className="h-4 w-4" />
+                </a>
+                <a href="#pricing" className="inline-flex items-center gap-2 rounded-full border border-white/20 px-6 py-3">
+                  View Pricing
+                </a>
+              </div>
+              <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
+                {specs.map((s, i) => (
+                  <Stat key={i} icon={s.icon} label={s.label} value={s.value} />
+                ))}
+              </div>
+            </div>
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              className="relative"
+            >
+              <div className="absolute inset-0 -z-10 rounded-3xl bg-gradient-to-tr from-fuchsia-500/20 via-purple-500/10 to-sky-400/20 blur-3xl" />
+              <img
+                src={gallery[0]}
+                alt="McLaren Artura on a city street"
+                className="w-full rounded-3xl border border-white/10 shadow-2xl"
+                loading="eager"
+              />
+              <div className="pointer-events-none absolute -bottom-4 -right-4 hidden rounded-2xl border border-white/10 bg-black/60 p-4 sm:flex">
+                <div className="mr-4 flex h-10 w-10 items-center justify-center rounded-xl bg-white/10"><Gauge className="h-5 w-5"/></div>
+                <div>
+                  <div className="text-sm text-white/70">Powertrain</div>
+                  <div className="font-semibold">671 hp hybrid (PHEV)</div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </Container>
+      </Section>
+
+      {/* Features */}
+      <Section>
+        <Container>
+          <div className="mb-10 flex items-end justify-between">
+            <h2 className="text-2xl font-semibold md:text-3xl">Why rent with LuxeMotion?</h2>
+            <div className="hidden items-center gap-2 text-white/60 md:flex">
+              <PhoneCall className="h-4 w-4" /> 24/7 concierge
+            </div>
+          </div>
+          <div className="grid gap-6 md:grid-cols-4">
+            {features.map((f, idx) => (
+              <Feature key={idx} icon={f.icon} title={f.title} desc={f.desc} />
+            ))}
+          </div>
+        </Container>
+      </Section>
+
+      {/* Pricing */}
+      <Section id="pricing" className="bg-white/5">
+        <Container>
+          <h2 className="text-center text-3xl font-bold md:text-4xl">Packages & Pricing</h2>
+          <p className="mx-auto mt-3 max-w-2xl text-center text-white/70">
+            Taxes, refundable deposit, and excess mileage fees apply. Submit a request to receive an exact quote and availability.
+          </p>
+          <div className="mt-10 grid gap-6 md:grid-cols-3">
+            {packages.map((p, i) => (
+              <div key={i} className={`relative rounded-3xl border border-white/10 p-6 ${p.popular ? "bg-white/10 ring-2 ring-white/20" : "bg-black/40"}`}>
+                {p.popular && (
+                  <span className="absolute -top-3 right-6 rounded-full bg-white px-2 py-1 text-xs font-semibold text-black">Most Popular</span>
+                )}
+                <h3 className="text-xl font-semibold">{p.name}</h3>
+                <div className="mt-2 flex items-baseline gap-2">
+                  <span className="text-3xl font-bold">${p.price.toLocaleString()}</span>
+                  <span className="text-sm text-white/60">+ tax</span>
+                </div>
+                <ul className="mt-4 space-y-2 text-white/80">
+                  {p.includes.map((li, k) => (
+                    <li key={k} className="flex items-center gap-2"><CheckCircle className="h-4 w-4" /> {li}</li>
+                  ))}
+                </ul>
+                <a href="#book" className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 font-semibold text-black">
+                  Reserve this package <ArrowRight className="h-4 w-4" />
+                </a>
+              </div>
+            ))}
+          </div>
+        </Container>
+      </Section>
+
+      {/* Specs */}
+      <Section id="specs">
+        <Container>
+          <div className="grid gap-10 md:grid-cols-2">
+            <div>
+              <h2 className="text-3xl font-bold md:text-4xl">Artura Highlights</h2>
+              <p className="mt-3 max-w-prose text-white/80">
+                Carbon‑fiber lightweight architecture paired with an all‑new twin‑turbo V6 and an axial‑flux e‑motor for seamless power delivery.
+                Electro‑hydraulic steering keeps feedback pure; Proactive Damping Control helps the chassis stay composed on any road.
+              </p>
+              <div className="mt-6 grid grid-cols-2 gap-4">
+                {specs.map((s, i) => (
+                  <Stat key={i} icon={s.icon} label={s.label} value={s.value} />
+                ))}
+              </div>
+              <div className="mt-6 flex flex-wrap gap-3 text-white/80">
+                <Pill><Gauge className="h-4 w-4"/> 8‑spd dual‑clutch</Pill>
+                <Pill><Fuel className="h-4 w-4"/> PHEV e‑assist</Pill>
+                <Pill><ShieldCheck className="h-4 w-4"/> Carbon‑ceramic brakes</Pill>
+              </div>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              {gallery.slice(0, 3).map((src, i) => (
+                <img key={i} src={src} alt={`McLaren Artura ${i + 1}`} className="h-56 w-full rounded-2xl object-cover" />
+              ))}
+              <div className="hidden h-56 w-full items-center justify-center rounded-2xl border border-white/10 bg-white/5 p-6 text-center md:flex">
+                <div>
+                  <MapPin className="mx-auto h-6 w-6" />
+                  <p className="mt-2 text-sm text-white/70">Delivery available in SoCal metro areas</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Container>
+      </Section>
+
+      {/* Gallery */}
+      <Section id="gallery" className="bg-white/5">
+        <Container>
+          <h2 className="text-3xl font-bold md:text-4xl">Gallery</h2>
+          <p className="mt-2 max-w-2xl text-white/70">
+            A few looks at the 2023 McLaren Artura. Replace these stock images with your own vehicle photos for launch.
+          </p>
+          <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
+            {gallery.map((src, i) => (
+              <img key={i} src={src} alt={`Artura gallery ${i + 1}`} className="h-56 w-full rounded-2xl object-cover" />
+            ))}
+          </div>
+        </Container>
+      </Section>
+
+      {/* Booking */}
+      <Section id="book">
+        <Container>
+          <div className="grid gap-10 md:grid-cols-2">
+            <div>
+              <h2 className="text-3xl font-bold md:text-4xl">Request a Reservation</h2>
+              <p className="mt-2 max-w-prose text-white/80">
+                Submit your dates and preferences. Our concierge will confirm availability and finalize your booking.
+              </p>
+              <div className="mt-6 space-y-3 text-white/80">
+                <div className="flex items-center gap-2"><Calendar className="h-4 w-4"/> Same‑day requests accepted when available</div>
+                <div className="flex items-center gap-2"><ShieldCheck className="h-4 w-4"/> Security deposit required at pickup</div>
+                <div className="flex items-center gap-2"><Clock className="h-4 w-4"/> Free cancellation up to 72 hours prior</div>
+              </div>
+            </div>
+
+            <form onSubmit={submit} className="rounded-2xl border border-white/10 bg-white/5 p-6">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="text-sm text-white/70">Full name</label>
+                  <input name="name" value={form.name} onChange={handleChange} className="mt-1 w-full rounded-xl border border-white/10 bg-black/40 px-3 py-2 outline-none focus:ring-2 focus:ring-white/30" placeholder="Angel Cruz" />
+                </div>
+                <div>
+                  <label className="text-sm text-white/70">Email</label>
+                  <input type="email" name="email" value={form.email} onChange={handleChange} className="mt-1 w-full rounded-xl border border-white/10 bg-black/40 px-3 py-2" placeholder="you@example.com" />
+                </div>
+                <div>
+                  <label className="text-sm text-white/70">Phone</label>
+                  <input name="phone" value={form.phone} onChange={handleChange} className="mt-1 w-full rounded-xl border border-white/10 bg-black/40 px-3 py-2" placeholder="(555) 123‑4567" />
+                </div>
+                <div>
+                  <label className="text-sm text-white/70">Pickup location</label>
+                  <input name="pickupLocation" value={form.pickupLocation} onChange={handleChange} className="mt-1 w-full rounded-xl border border-white/10 bg-black/40 px-3 py-2" placeholder="Los Angeles" />
+                </div>
+                <div>
+                  <label className="text-sm text-white/70">Pickup date</label>
+                  <input type="date" min={todayISO} name="pickupDate" value={form.pickupDate} onChange={handleChange} className="mt-1 w-full rounded-xl border border-white/10 bg-black/40 px-3 py-2" />
+                </div>
+                <div>
+                  <label className="text-sm text-white/70">Drop‑off date</label>
+                  <input type="date" min={form.pickupDate || todayISO} name="dropoffDate" value={form.dropoffDate} onChange={handleChange} className="mt-1 w-full rounded-xl border border-white/10 bg-black/40 px-3 py-2" />
+                </div>
+                <div>
+                  <label className="text-sm text-white/70">Driver age</label>
+                  <input name="age" value={form.age} onChange={handleChange} className="mt-1 w-full rounded-xl border border-white/10 bg-black/40 px-3 py-2" placeholder="25+" />
+                </div>
+                <div className="rounded-xl border border-white/10 bg-black/30 p-3">
+                  <div className="flex items-center gap-2">
+                    <input id="insurance" type="checkbox" name="insurance" checked={form.insurance} onChange={handleChange} />
+                    <label htmlFor="insurance" className="text-sm">Add premium insurance (+$199/day)</label>
+                  </div>
+                  <div className="mt-2 flex items-center gap-2">
+                    <input id="delivery" type="checkbox" name="delivery" checked={form.delivery} onChange={handleChange} />
+                    <label htmlFor="delivery" className="text-sm">Door delivery (+$149)</label>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-4 flex items-center gap-2">
+                <input id="terms" type="checkbox" name="terms" checked={form.terms} onChange={handleChange} />
+                <label htmlFor="terms" className="text-sm text-white/70">
+                  I agree to the rental terms, mileage limits, and security deposit.
+                </label>
+              </div>
+              <button type="submit" className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 font-semibold text-black">
+                Request Quote <ArrowRight className="h-4 w-4" />
+              </button>
+              <QuotePreview form={form} />
+            </form>
+          </div>
+        </Container>
+      </Section>
+
+      {/* FAQ */}
+      <Section className="bg-white/5">
+        <Container>
+          <h2 className="text-3xl font-bold md:text-4xl">FAQ</h2>
+          <div className="mt-6 grid gap-6 md:grid-cols-2">
+            <Faq q="What is the security deposit?" a="A refundable $3,000–$5,000 hold is placed on your card at pickup, depending on driver history and package." />
+            <Faq q="What are the mileage limits?" a="Half‑Day: 75 mi, Full Day: 150 mi, Weekend: 300 mi. Excess miles are billed at $7/mi." />
+            <Faq q="Do you allow out‑of‑state travel?" a="Yes, with prior written approval and adjusted mileage limits. Delivery beyond SoCal is available by quote." />
+            <Faq q="What license and insurance do I need?" a="A valid driver’s license (25+) and proof of full‑coverage personal auto insurance. Our premium insurance can supplement coverage." />
+          </div>
+        </Container>
+      </Section>
+
+      {/* Footer */}
+      <footer className="border-t border-white/10 bg-black/60">
+        <Container className="flex flex-col items-center justify-between gap-4 py-8 md:flex-row">
+          <div className="text-white/60">© {new Date().getFullYear()} LuxeMotion Rentals</div>
+          <div className="flex items-center gap-6 text-white/70">
+            <a href="#pricing" className="hover:text-white">Pricing</a>
+            <a href="#book" className="hover:text-white">Reserve</a>
+            <a href="#top" className="hover:text-white">Back to top</a>
+          </div>
+        </Container>
+      </footer>
+    </div>
+  );
+}
+
+function QuotePreview({ form }) {
+  if (!form.pickupDate || !form.dropoffDate) return null;
+  const dayMs = 24 * 60 * 60 * 1000;
+  const days = Math.max(1, Math.ceil((new Date(form.dropoffDate) - new Date(form.pickupDate)) / dayMs));
+  const base = days === 1 ? 1999 : days === 2 ? 3499 : 1999 * days;
+  const opts = (form.insurance ? 199 : 0) + (form.delivery ? 149 : 0);
+  const total = base + opts;
+  return (
+    <div className="mt-4 rounded-xl border border-white/10 bg-black/40 p-4 text-sm text-white/80">
+      <div className="mb-2 font-semibold text-white">Live Estimate</div>
+      <div className="grid grid-cols-2 gap-2">
+        <div>Vehicle</div><div className="text-right">2023 McLaren Artura</div>
+        <div>Duration</div><div className="text-right">{days} {days > 1 ? "days" : "day"}</div>
+        <div>Base</div><div className="text-right">${base.toLocaleString()}</div>
+        <div>Options</div><div className="text-right">${opts.toLocaleString()}</div>
+        <div className="font-semibold">Total (est.)</div><div className="text-right font-semibold">${total.toLocaleString()}</div>
+      </div>
+    </div>
+  );
+}
+
+function Faq({ q, a }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/5">
+      <button onClick={() => setOpen((v) => !v)} className="flex w-full items-center justify-between px-6 py-4 text-left">
+        <span className="font-medium">{q}</span>
+        <span className={`transition-transform ${open ? "rotate-90" : ""}`}>›</span>
+      </button>
+      {open && <div className="px-6 pb-6 -mt-2 text-white/70">{a}</div>}
+    </div>
+  );
+}
